@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fake News Detection System</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="topbar">
+      <span>Machine Learning Project</span>
+      <button id="themeBtn" class="icon-btn" aria-label="Toggle dark mode">Dark mode</button>
+    </div>
+    <h1>Fake News Detection System</h1>
+    <p class="tagline">Separating fact from fiction with Machine Learning</p>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="check" role="tab">Check News</button>
+      <button class="tab" data-tab="batch" role="tab">Batch Check</button>
+      <button class="tab" data-tab="dashboard" role="tab">Dashboard</button>
+      <button class="tab" data-tab="history" role="tab">History</button>
+      <button class="tab" data-tab="about" role="tab">About</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- ============ CHECK ============ -->
+    <section id="tab-check" class="panel">
+      <div class="card">
+        <div class="mode-switch">
+          <button class="mode active" data-mode="text">Paste text</button>
+          <button class="mode" data-mode="url">Check by URL</button>
+        </div>
+
+        <div id="textMode">
+          <label for="newsText" class="label">News headline or article</label>
+          <textarea id="newsText" rows="7" placeholder="Paste or type news text here…"></textarea>
+          <div class="examples">
+            <span class="muted">Try an example:</span>
+            <button class="chip" data-example="Shocking secret doctors don't want you to know! This miracle drink cures diabetes in 3 days. Share before it's deleted!">Suspicious</button>
+            <button class="chip" data-example="The election commission released the final schedule for the upcoming assembly elections, officials said on Monday.">Normal</button>
+          </div>
+        </div>
+
+        <div id="urlMode" hidden>
+          <label for="newsUrl" class="label">Article URL</label>
+          <input id="newsUrl" type="url" placeholder="https://example.com/news/article">
+        </div>
+
+        <div class="actions">
+          <button id="checkBtn" class="btn">Analyze</button>
+          <button id="voiceBtn" class="btn btn-outline" title="Speak the news text">Voice input</button>
+          <button id="clearBtn" class="btn btn-outline">Clear</button>
+          <span id="charCount" class="muted">0 words · 0 characters</span>
+        </div>
+        <p id="error" class="error" hidden></p>
+      </div>
+
+      <div id="result" hidden>
+        <div class="result card">
+          <div id="stamp" class="stamp">—</div>
+          <div class="result-main">
+            <p class="label">Prediction</p>
+            <p id="resultText" class="result-text"></p>
+            <div class="prob-row"><span>Real</span><div class="meter"><div id="realBar" class="meter-fill real"></div></div><span id="realPct">0%</span></div>
+            <div class="prob-row"><span>Fake</span><div class="meter"><div id="fakeBar" class="meter-fill fake"></div></div><span id="fakePct">0%</span></div>
+            <p id="articleTitle" class="muted"></p>
+            <div class="actions">
+              <span class="muted">Was this correct?</span>
+              <button id="fbYes" class="btn btn-outline btn-small">Yes</button>
+              <button id="fbNo" class="btn btn-outline btn-small">No</button>
+              <button id="copyBtn" class="btn btn-outline btn-small">Copy result</button>
+              <span id="fbMsg" class="muted"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Key words behind this result</h3>
+            <ul id="keyWords" class="word-list"></ul>
+          </div>
+          <div class="card">
+            <h3>Warning signs</h3>
+            <ul id="redFlags" class="flag-list"></ul>
+            <p id="textStats" class="muted"></p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Highlighted text</h3>
+          <p id="highlighted" class="highlighted"></p>
+          <p class="muted"><mark class="hl-fake">red</mark> words pushed towards FAKE, <mark class="hl-real">green</mark> words towards REAL.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BATCH ============ -->
+    <section id="tab-batch" class="panel" hidden>
+      <div class="card">
+        <h2>Batch Check (CSV)</h2>
+        <p class="muted">Upload a CSV file with a column named <code>text</code>. Up to 500 rows are checked at once.</p>
+        <label for="batchFile" class="label">CSV file</label>
+        <input id="batchFile" type="file" accept=".csv">
+        <div class="actions">
+          <button id="batchBtn" class="btn">Run batch check</button>
+        </div>
+        <p id="batchError" class="error" hidden></p>
+      </div>
+      <div id="batchResult" class="card" hidden>
+        <div class="stats">
+          <div class="stat"><span id="bTotal">0</span><small>Checked</small></div>
+          <div class="stat"><span id="bReal">0</span><small>Real</small></div>
+          <div class="stat"><span id="bFake">0</span><small>Fake</small></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Text</th><th>Result</th><th>Confidence</th></tr></thead>
+            <tbody id="batchBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DASHBOARD ============ -->
+    <section id="tab-dashboard" class="panel" hidden>
+      <div class="stats stats-4">
+        <div class="stat"><span id="statTotal">0</span><small>Total checks</small></div>
+        <div class="stat"><span id="statReal">0</span><small>Real</small></div>
+        <div class="stat"><span id="statFake">0</span><small>Fake</small></div>
+        <div class="stat"><span id="statConf">0%</span><small>Avg confidence</small></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>Real vs Fake</h3><canvas id="pieChart" height="220"></canvas></div>
+        <div class="card"><h3>Checks per day</h3><canvas id="barChart" height="220"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="history-head">
+          <h3>Model comparison</h3>
+          <button id="retrainBtn" class="btn btn-small">Retrain with feedback</button>
+        </div>
+        <p id="modelMeta" class="muted"></p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead>
+            <tbody id="modelBody"></tbody>
+          </table>
+        </div>
+        <p id="feedbackMeta" class="muted"></p>
+      </div>
+    </section>
+
+    <!-- ============ HISTORY ============ -->
+    <section id="tab-history" class="panel" hidden>
+      <div class="card">
+        <div class="history-head">
+          <h2>History</h2>
+          <div class="actions">
+            <a href="/api/export" class="btn btn-outline btn-small">Export CSV</a>
+            <button id="clearHistoryBtn" class="btn btn-outline btn-small">Clear all</button>
+          </div>
+        </div>
+        <div class="filters">
+          <label for="searchBox" class="sr-only">Search</label>
+          <input id="searchBox" type="search" placeholder="Search news text…">
+          <label for="labelFilter" class="sr-only">Filter by result</label>
+          <select id="labelFilter">
+            <option value="">All results</option>
+            <option value="REAL">Real only</option>
+            <option value="FAKE">Fake only</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>News text</th><th>Source</th><th>Result</th><th>Confidence</th><th>Feedback</th><th>Date</th><th></th></tr></thead>
+            <tbody id="historyBody"><tr><td colspan="8" class="muted">No checks yet.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ABOUT ============ -->
+    <section id="tab-about" class="panel" hidden>
+      <div class="card about">
+        <h2>How it works</h2>
+        <ol>
+          <li><b>Input</b> — paste text, give a URL, speak, or upload a CSV.</li>
+          <li><b>Preprocess</b> — lowercase, remove URLs, punctuation, numbers and stopwords.</li>
+          <li><b>Vectorize</b> — TF-IDF converts words into numeric features.</li>
+          <li><b>Classify</b> — the best of 4 trained models predicts REAL or FAKE.</li>
+          <li><b>Explain</b> — key words and warning signs show why.</li>
+          <li><b>Store</b> — every result and feedback is saved in SQLite.</li>
+        </ol>
+        <h2>Tech stack</h2>
+        <p>HTML · CSS · JavaScript · Chart.js &nbsp;|&nbsp; Python · Flask · scikit-learn · Pandas · BeautifulSoup &nbsp;|&nbsp; SQLite</p>
+        <p class="muted">Note: ML predictions can be wrong. Always verify important news with trusted sources.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <footer class="footer">Fake News Detection System · Built with HTML, CSS, JavaScript, Python ML and SQLite</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
