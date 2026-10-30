@@ -60,7 +60,7 @@ fake-news-detection/
 ## Setup & run
 
 ```bash
-git clone https://github.com/<your-username>/fake-news-detection.git
+git clone https://github.com/Janhavijadhav29/fake-news-detection.git
 cd fake-news-detection
 pip install -r requirements.txt
 
@@ -108,6 +108,6 @@ python backend/train_model.py data/news.csv
 
 ## Author
 
-**Pratik Raut** — [GitHub](https://github.com/pratikraut01) · [LinkedIn](https://linkedin.com/in/pratik-raut123)
+**Janhavi Jadhav** — [GitHub](https://github.com/Janhavijadhav29)
 
 > ML predictions can be wrong. Always verify important news with trusted sources.
